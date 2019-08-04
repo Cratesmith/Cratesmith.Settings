@@ -12,5 +12,7 @@
 	"src": "Packages/Cratesmith.Settings",
 	"author": "Kieran Lord <cratesmith@cratesmith.com> (https://github.com/cratesmith)",
 	"dependencies": {
+		"com.cratesmith.utils": "https://github.com/Cratesmith/Cratesmith.Utils.git#develop",
+		"com.cratesmith.popoutinspector": "https://github.com/Cratesmith/Cratesmith.PopoutInspector.git#develop"
 	}
 }
