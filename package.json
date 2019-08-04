@@ -1,0 +1,16 @@
+{
+	"name": "com.cratesmith.settings",
+	"displayName": "Cratesmith.Settings",
+	"description": "A safe, null-free, polymorphic workflow for creating and using ScriptableObjects assets to store data in unity",
+	"version": "0.0.1",
+	"unity": "2018.3",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Cratesmith/Cratesmith.Settings.git"
+	},
+	"src": "Packages/Cratesmith.Settings",
+	"author": "Kieran Lord <cratesmith@cratesmith.com> (https://github.com/cratesmith)",
+	"dependencies": {
+	}
+}
