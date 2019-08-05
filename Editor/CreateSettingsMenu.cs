@@ -9,6 +9,7 @@ namespace Cratesmith.Settings
     {
         const string formatString = "using UnityEngine;\n" +
                                     "using System;\n" +
+                                    "using Cratesmith.Settings;\n" +
                                     "\n" +
                                     "public class {0} : {1}<{0}>\n" +
                                     "{{\n" +

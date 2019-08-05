@@ -114,6 +114,7 @@ namespace Cratesmith.Settings
 
 #if UNITY_EDITOR
         //[UnityEditor.Callbacks.DidReloadScripts(CallbackOrder.SETTINGS_ASSETS)]
+        [UnityEditor.Callbacks.DidReloadScripts(0)]
         public static void OnDidReloadScripts()
         {
             AssetDatabase.StartAssetEditing();
