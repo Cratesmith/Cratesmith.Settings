@@ -1,10 +1,16 @@
-﻿using System;
+﻿#define LOG_DEBUG
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using UnityEditor.Callbacks;
 #if UNITY_EDITOR
+using System.Linq;
 using System.IO;
 using UnityEditor;
 #endif
 using UnityEngine;
 using UnityEngine.Assertions;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 namespace Cratesmith.Settings
@@ -113,19 +119,84 @@ namespace Cratesmith.Settings
         }
 
 #if UNITY_EDITOR
-        //[UnityEditor.Callbacks.DidReloadScripts(CallbackOrder.SETTINGS_ASSETS)]
-        [UnityEditor.Callbacks.DidReloadScripts(0)]
-        public static void OnDidReloadScripts()
+        public class Builder : UnityEditor.AssetPostprocessor
         {
-            AssetDatabase.StartAssetEditing();
-            foreach (var script in MonoImporter.GetAllRuntimeMonoScripts())
+            const string EDITORPREFS_KEY_ModifiedPaths = "SettingsAsset.Builder.ModifiedPaths";
+            [Serializable] public class PathList
             {
-                BuildDefaultAsset(script.GetClass());
+                public string[] values;
+            } 
+            static string[] ModifiedPaths
+            {
+                set
+                {
+                    var json = JsonUtility.ToJson(new PathList {values = value});
+                    EditorPrefs.SetString(EDITORPREFS_KEY_ModifiedPaths,json);
+                }
+                get
+                {
+                    var json = EditorPrefs.GetString(EDITORPREFS_KEY_ModifiedPaths);
+                    var data = JsonUtility.FromJson<PathList>(json);
+                    return data?.values != null ? data.values:new string[0];
+                }
             }
-            AssetDatabase.StopAssetEditing();
-            AssetDatabase.SaveAssets();
+
+            static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets,
+                string[] movedFromAssetPaths)
+            {
+                ModifiedPaths = importedAssets
+                    .Concat(movedAssets)
+                    .Where(x => AssetImporter.GetAtPath(x) as MonoImporter)
+                    .ToArray();
+            }
+
+           
+            
+            [DidReloadScripts]
+            static void ScriptReload()
+            {
+                var modifiedClasses = ModifiedPaths
+                    .Select(x => MonoImporter.GetAtPath(x) as MonoImporter).Where(x => x != null)
+                    .Select(x => x.GetScript()).Where(x=>x)
+                    .Select(x => x.GetClass()).Where(IsSettingsAsset)
+                    .ToArray();
+
+                if (modifiedClasses.Length > 0)
+                {      
+#if LOG_DEBUG
+                    var stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                    Debug.Log($"SettingsAssets rebuilding {string.Join(",",modifiedClasses.Select(x=>x.Name))}");
+#endif
+                    AssetDatabase.StartAssetEditing();
+                    foreach (var modifiedClass in modifiedClasses)
+                    {
+                        BuildDefaultAsset(modifiedClass);
+                    }    
+                    AssetDatabase.StopAssetEditing();
+                    if (BuildPipeline.isBuildingPlayer)
+                    {
+                        AssetDatabase.SaveAssets();
+                    }
+                    else
+                    {
+                        EditorApplication.delayCall += AssetDatabase.SaveAssets;
+                    }
+#if LOG_DEBUG
+                    stopwatch.Stop();
+                    Debug.Log($"SettingsAssets rebuild complete, took {stopwatch.Elapsed.TotalSeconds}");
+#endif
+                }
+
+                ModifiedPaths = new string[0];
+            }
         }
-	
+        
+        static bool IsSettingsAsset(Type type)
+        {
+            return type != null && !type.IsAbstract && typeof(SettingsAssetBase).IsAssignableFrom(type);
+        }
+
         protected static void BuildDefaultAsset(Type scriptClass)
         {
             if (scriptClass == null || scriptClass.IsAbstract || !typeof(SettingsAssetBase).IsAssignableFrom(scriptClass))
