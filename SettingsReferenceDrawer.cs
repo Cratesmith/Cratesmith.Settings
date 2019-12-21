@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Cratesmith.Utils;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
