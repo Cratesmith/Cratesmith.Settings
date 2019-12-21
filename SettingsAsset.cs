@@ -1,9 +1,8 @@
 ﻿#define LOG_DEBUG
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using UnityEditor.Callbacks;
 #if UNITY_EDITOR
+using UnityEditor.Callbacks;
 using System.Linq;
 using System.IO;
 using UnityEditor;
