@@ -149,12 +149,9 @@ namespace Cratesmith.Settings
                     .ToArray();
             }
 
-           
-            
-            [DidReloadScripts]
-            static void ScriptReload()
+            static void RebuildModifiedScripts()
             {
-                var modifiedClasses = ModifiedPaths
+var modifiedClasses = ModifiedPaths
                     .Select(x => MonoImporter.GetAtPath(x) as MonoImporter).Where(x => x != null)
                     .Select(x => x.GetScript()).Where(x=>x)
                     .Select(x => x.GetClass()).Where(IsSettingsAsset)
@@ -188,6 +185,12 @@ namespace Cratesmith.Settings
                 }
 
                 ModifiedPaths = new string[0];
+            }
+            
+            [DidReloadScripts]
+            static void ScriptReload()
+            {
+                EditorApplication.delayCall += RebuildModifiedScripts;
             }
         }
         
